@@ -1,0 +1,4 @@
+@startuml
+actor Покупатель
+Покупатель --> (Поиск по VIN)
+@enduml
