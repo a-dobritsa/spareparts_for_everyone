@@ -1,66 +1,59 @@
 @startuml
-title Алгоритм создания заказа
+title Создание заказа
 skinparam activity {
-    startColor green
-    stopColor red
+startColor green
+endColor red
+stopColor red
 }
 
-|Пользователь|
+swimlane Клиент
 start
-:Перейти\nк оформлению\nзаказа;
-
-|Система|
-if (Корзина\nпуста?) then (Да)
-  :Показать ошибку\n"Корзина пуста";
-  stop
-else (Нет)
-  if (Пользователь\nавторизован?) then (Нет)
-    :Показать форму\nвхода/регистрации;
-    |Пользователь|
-    :Ввести\nemail и пароль;
-    |Система|
-    while (Данные\nкорректны?) is (Нет)
-      :Показать ошибку\n"Неверный email или пароль";
-      |Пользователь|
-      :Исправить\nemail и пароль;
-      |Система|
-    endwhile
-    :Авторизовать\nпользователя;
-  else (Да)
-  endif
-
-  |Пользователь|
-  :Указать адрес доставки и\nспособ доставки;
-  |Система|
-  while (Адрес\nкорректен?) is (Нет)
-    :Показать ошибку\n"Некорректный адрес";
-    |Пользователь|
-    :Исправить\nадрес доставки;
-    |Система|
-  endwhile
-  :Адрес\nпринят;
-
-  |Пользователь|
-  :Выбрать\nспособ оплаты\n(онлайн-карта);
-  note left: В MVP у нас\nтолько один базовый\nонлайн-эквайринг
-
-  |Система|
-  if (Все\nтовары\nв наличии?) then (Нет)
-    :Показать ошибку\n"Некоторые товары\nнедоступны";
-    |Пользователь|
-    :Обновить корзину;
-    stop
-  else (Да)
-    |Пользователь|
-    :Подтвердить\nзаказ;
-    |Система|
-    fork
-      :Сохранить\nзаказ в БД;
-    fork again
-      :Отправить\nemail-уведомление;
-    end fork
-    :Завершить\nоформление;
-    stop
-  endif
-endif
+    : Переход к оформлению корзины с товарами;
+    note 
+      POST/checkout
+    end note
+swimlane Сервер
+        if (Токен не валидный/ не актуальный?) then (Да)
+swimlane Клиент
+        : Не авторизован;
+        note
+          401 Unauthorized
+        end note
+        end
+        else
+        :Ввод адреса;
+        endif
+swimlane Сервер
+          if (Адрес не валиден?) then (Да)
+swimlane Клиент
+          :Невалидный адресс;
+          note
+            400 Bad Request
+            error "invalid address"
+          end note
+          end
+          else
+swimlane Сервер
+            if (Есть отсутствующие товары из корзины?) then (Да)
+swimlane Клиент
+            :Нет в наличии;
+            note 
+             400 Bad Request
+              error"out of stock"
+            end note
+            end
+            else
+swimlane Сервер
+              :Сохранить позиции заказа;
+              note
+                INSERT INTO order_items (...);
+              end note
+          endif
+            endif
+swimlane Клиент
+                :Успешно;
+                note
+                  201 Created
+                endnote
+            stop
 @enduml
