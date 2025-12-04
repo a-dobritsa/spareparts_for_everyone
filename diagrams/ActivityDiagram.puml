@@ -7,53 +7,79 @@ stopColor red
 }
 
 swimlane Клиент
-start
-    : Переход к оформлению корзины с товарами;
-    note 
-      POST/checkout
-    end note
+  start
+  : Переход к оформлению\nкорзины с товарами;
+  note 
+    POST/checkout
+  end note
 swimlane Сервер
-        if (Токен не валидный/ не актуальный?) then (Да)
+      if (Корзина\nне найдена?) then (Да)
 swimlane Клиент
-        : Не авторизован;
+        :Корзина\nне найдена;
         note
-          401 Unauthorized
+          404 Not Found
+          error "cart_not_found"
         end note
-        end
-        else
-        :Ввод адреса;
-        endif
+        stop
+      endif
 swimlane Сервер
-          if (Адрес не валиден?) then (Да)
+        if (Токен\nне валидный/\nне актуальный?) then (Да)
 swimlane Клиент
-          :Невалидный адресс;
+          :Не авторизован;
           note
-            400 Bad Request
-            error "invalid address"
+            401 Unauthorized
           end note
-          end
+          stop
           else
 swimlane Сервер
-            if (Есть отсутствующие товары из корзины?) then (Да)
+            if (Корзина не принадлежит\nпользователю\nиз токена?) then (Да)
 swimlane Клиент
-            :Нет в наличии;
-            note 
-             400 Bad Request
-              error"out of stock"
-            end note
-            end
-            else
-swimlane Сервер
-              :Сохранить позиции заказа;
+              :Несовпадение\nтокена и корзины;
               note
-                INSERT INTO order_items (...);
+                403 Forbidden
+                error "cart not owened"
               end note
-          endif
+              stop
+              else
+              :Ввод\nадреса;
+        endif
             endif
+swimlane Сервер
+              if (Адрес\nне\nвалиден?) then (Да)
 swimlane Клиент
-                :Успешно;
+                :Невалидный\nадресс;
                 note
-                  201 Created
-                endnote
-            stop
+                 400 Bad Request
+                  error "invalid address"
+                end note
+                stop
+                else
+swimlane Сервер
+                if (Есть отсутствующие\nтовары\nиз корзины?) then (Да)
+swimlane Клиент
+                  :Нет\nв наличии;
+                   note 
+                    409 Conflict
+                    error"out of stock"
+                  end note
+                  stop
+                  else
+swimlane Сервер
+                  :Получить данные\nкозины и товаров;
+                  note
+                    SELECT из cart_items и products
+                    WHERE session_id = :session;
+                  end note
+                  :Сохранить позиции\nзаказа;
+                  note
+                  INSERT INTO order_items (...);
+                  end note
+              endif
+                endif
+swimlane Клиент
+  :Успешно;
+  note
+    201 Created
+  end note
+  stop
 @enduml
