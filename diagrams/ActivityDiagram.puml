@@ -55,6 +55,11 @@ swimlane Клиент
                 stop
                 else
 swimlane Сервер
+                  :Получить данные\nкозины и товаров;
+                  note
+                    SELECT из cart_items и products
+                    WHERE session_id = :session;
+                  end note
                 if (Есть отсутствующие\nтовары\nиз корзины?) then (Да)
 swimlane Клиент
                   :Нет\nв наличии;
@@ -65,11 +70,6 @@ swimlane Клиент
                   stop
                   else
 swimlane Сервер
-                  :Получить данные\nкозины и товаров;
-                  note
-                    SELECT из cart_items и products
-                    WHERE session_id = :session;
-                  end note
                   :Сохранить позиции\nзаказа;
                   note
                   INSERT INTO order_items (...);
