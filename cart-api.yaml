@@ -1,0 +1,316 @@
+openapi: 3.0.3
+info:
+  title: Корзина автозапчастей «Spare Parts for Everyone»
+  description: |
+    API для управления корзиной товаров. Поддерживает HATEOAS, идемпотентные операции,
+    асинхронное оформление заказа и валидацию по JSON Schema Draft 4.
+  version: 1.0.0
+servers:
+  - url: https://api.spareparts-for-everyone.com/v1
+    description: Production server
+
+paths:
+  /cart:
+    get:
+      summary: Получить корзину
+      description: |
+        Возвращает текущее состояние корзины с гипермедиа-ссылками (HATEOAS).
+        Поддерживает кэширование через ETag.
+      parameters:
+        - name: If-None-Match
+          in: header
+          description: ETag предыдущего ответа для проверки изменений
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Корзина успешно получена
+          headers:
+            ETag:
+              description: Хэш состояния корзины (например, SHA-256)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '304':
+          description: Корзина не изменилась — использовать кэш
+        '401':
+          description: Пользователь не авторизован
+
+  /cart/items:
+    post:
+      summary: Добавить товар в корзину
+      description: |
+        Добавляет позицию в корзину. Идемпотентен при использовании Idempotency-Key.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: |
+            Уникальный идемпотентный ключ (1–64 символа: латиница, цифры, _-).
+            Повторный запрос с тем же ключом вернёт идентичный результат.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: '^[a-zA-Z0-9_-]+$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemRequest'
+      responses:
+        '201':
+          description: Товар добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          description: Некорректные данные запроса
+        '409':
+          description: Корзина заблокирована (например, идёт оформление заказа)
+        '429':
+          description: Превышен лимит запросов (rate limit)
+        '408':
+          description: Таймаут ожидания ответа от inventory-сервиса
+
+  '/cart/items/{itemId}':
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        description: Идентификатор позиции в корзине (SKU или временный ID)
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '^[A-Z0-9_-]+$'
+    patch:
+      summary: Обновить количество товара
+      description: |
+        Обновляет количество товара. Требует актуальный ETag через If-Match
+        для предотвращения конфликтов при одновременном редактировании.
+      parameters:
+        - name: If-Match
+          in: header
+          required: true
+          description: Текущий ETag корзины
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+      responses:
+        '200':
+          description: Успешное обновление
+          headers:
+            ETag:
+              description: Новый ETag корзины
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '412':
+          description: ETag не совпадает — конфликт версий
+        '409':
+          description: Корзина заблокирована
+        '404':
+          description: Позиция с указанным itemId не найдена
+
+  /cart/checkout:
+    post:
+      summary: Инициировать оформление заказа
+      description: |
+        Запускает асинхронный процесс оформления заказа.
+        Клиент должен опрашивать статус через GET /cart/checkout/{taskId}.
+      responses:
+        '202':
+          description: Оформление заказа запущено
+          headers:
+            Location:
+              description: URL для проверки статуса (long-polling)
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: string
+                    minLength: 1
+                    example: "task_abc123"
+                  status:
+                    type: string
+                    enum: [pending]
+                    example: "pending"
+                required: [taskId, status]
+                additionalProperties: false
+        '400':
+          description: Корзина пуста или содержит недопустимые товары
+        '409':
+          description: Корзина уже в процессе оформления
+        '408':
+          description: Таймаут при взаимодействии с inventory или payment
+        '429':
+          description: Слишком много попыток оформления
+
+  '/cart/checkout/{taskId}':
+    get:
+      summary: Получить статус оформления заказа
+      description: |
+        Long-polling эндпоинт. Сервер удерживает соединение до 30 секунд,
+        пока заказ не будет готов или не истечёт таймаут.
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Заказ успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: string
+                    example: "order_12345"
+                  status:
+                    type: string
+                    enum: [created]
+                    example: "created"
+                required: [orderId, status]
+                additionalProperties: false
+        '202':
+          description: Оформление ещё в процессе — клиент должен повторить запрос
+        '404':
+          description: Задача с указанным taskId не найдена
+        '408':
+          description: Таймаут ожидания завершения операции
+
+components:
+  schemas:
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный ID позиции в корзине
+          example: "item_123"
+        sku:
+          type: string
+          description: Артикул производителя (OEM-номер)
+          minLength: 1
+          maxLength: 50
+          pattern: '^[A-Z0-9_-]+$'
+          example: "SKFOR020994"
+        name:
+          type: string
+          description: Название запчасти
+          example: "Фильтр масляный"
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 99
+          example: 2
+        price:
+          type: number
+          format: float
+          minimum: 0
+          example: 500.0
+        inStock:
+          type: boolean
+          example: true
+      required: [id, sku, name, quantity, price, inStock]
+      additionalProperties: false
+
+    LinkObject:
+      type: object
+      properties:
+        href:
+          type: string
+          format: uri
+        method:
+          type: string
+          enum: [GET, POST, PATCH, DELETE]
+        title:
+          type: string
+      required: [href, method]
+      additionalProperties: false
+
+    CartResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+          maxItems: 100
+        totalItems:
+          type: integer
+          minimum: 0
+          example: 2
+        totalPrice:
+          type: number
+          format: float
+          minimum: 0
+          example: 1000.0
+        _links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/LinkObject'
+            addItem:
+              $ref: '#/components/schemas/LinkObject'
+            checkout:
+              $ref: '#/components/schemas/LinkObject'
+          required: [self, addItem, checkout]
+          additionalProperties: false
+      required: [items, totalItems, totalPrice, _links]
+      additionalProperties: false
+
+    AddItemRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Артикул товара
+          minLength: 1
+          maxLength: 50
+          pattern: '^[A-Z0-9_-]+$'
+          example: "BOSCH12345"
+        quantity:
+          type: integer
+          description: Количество
+          minimum: 1
+          maximum: 99
+          default: 1
+          example: 1
+      required: [sku, quantity]
+      additionalProperties: false
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          description: Новое абсолютное количество (не дельта!)
+          minimum: 1
+          maximum: 99
+          example: 3
+      required: [quantity]
+      additionalProperties: false
