@@ -1,8 +1,8 @@
 @startuml
 title Механика работы с корзиной и оформления заказа
 skinparam activity {
-startColor green
-stopColor red
+  startColor green
+  stopColor red
 }
 
 swimlane Клиент
@@ -10,72 +10,86 @@ swimlane Клиент
   :Просмотр каталога,\nпоиск по VIN/артикулу;
   :Добавить товар\nв корзину;
   note 
-    POST /carts/{cartId}/items
+    POST /carts/items
   end note
+
 swimlane Сервер
-  if (Корзина\nне найдена?) then (Да)
+  if (Корзина существует?) then (Нет)
     :Создать анонимную корзину;
+    :Сгенерировать уникальный cartId\n(UUID v4);
   endif
+  :Вернуть cartId\nв Location и теле ответа;
+
+swimlane Клиент
+  :Сохранить cartId\n(в cookie/localStorage);
+
+swimlane Сервер
   :Проверить наличие\nтовара на складе;
   if (Достаточно\nтовара?) then (Нет)
-swimlane Клиент
-    :Недостаточно\nтовара;
-    note
-      400 Bad Request
-      error "insufficient_stock"
-    end note
-    stop
+    swimlane Клиент
+      :Недостаточно\nтовара;
+      note
+        400 Bad Request
+        error "insufficient_stock"
+        available 5
+      end note
+      stop
   endif
   :Добавить товар\nв корзину;
+
 swimlane Клиент
   :Обновить/удалить\nтовары;
   note
     PATCH /carts/{cartId}/items/{itemId}
     DELETE /carts/{cartId}/items/{itemId}
   end note
+
 swimlane Сервер
   :Обновить корзину\nпо cartId\n(без авторизации);
+
 swimlane Клиент
   :Нажать "Оформить\nзаказ";
   note
     POST /carts/{cartId}/checkout
   end note
+
 swimlane Сервер
   if (JWT\nпредоставлен?) then (Нет)
-swimlane Клиент
-    :Требуется\nавторизация;
-    note
-      401 Unauthorized
-    end note
-    :Отправить логин/\nпароль;
-    note
-      POST /auth/login
-    end note
-swimlane Сервер
-    :Аутентифицировать\nпользователя;
-    if (Успешно?) then (Нет)
-swimlane Клиент
-      :Неверные\nданные;
+    swimlane Клиент
+      :401 Unauthorized;\nперенаправление на логин;
+      :Отправить логин/\nпароль;
       note
-        400 Bad Request
-        error "invalid_credentials"
+        POST /auth/login
       end note
-      stop
-    endif
-    :Привязать корзину\nк user_id;
+
+    swimlane Сервер
+      :Аутентифицировать\nпользователя;
+      if (Успешно?) then (Нет)
+        swimlane Клиент
+          :Неверные\nданные;
+          note
+            400 Bad Request
+            error "invalid_credentials"
+          end note
+          stop
+      endif
+      :Привязать корзину\nк user_id\n(UPDATE carts SET user_id = ?);
   endif
+
   :Проверить наличие\nвсех товаров\nв корзине;
   if (Есть\nнедоступные\nтовары?) then (Да)
-swimlane Клиент
-    :Товары\nнедоступны;
-    note
-      409 Conflict
-      error "items_unavailable"
-    end note
-    stop
+    swimlane Клиент
+      :Товары\nнедоступны;
+      note
+        409 Conflict
+        error "items_unavailable"
+      end note
+      stop
   endif
+
   :Создать заказ\nв БД;
   :Отправить\nуведомление;
+
 swimlane Клиент
   :Успешно;
   note
