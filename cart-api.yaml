@@ -2,136 +2,53 @@ openapi: 3.0.3
 info:
   title: Корзина автозапчастей «Spare Parts for Everyone»
   description: |
-    API для управления корзинами товаров. Поддерживает анонимные и авторизованные корзины,
-    HATEOAS в формате HAL, идемпотентные операции и асинхронное оформление заказа.
-  version: 1.0.0
+    API для управления корзинами товаров.
+    Все схемы запросов и ответов соответствуют JSON Schema Draft 4.
+  version: 1.0.2
 servers:
   - url: https://api.spareparts-for-everyone.com/v1
-    description: Production server
 
 paths:
   /carts:
     get:
       summary: Получить список корзин пользователя
       description: |
-        Возвращает все корзины, принадлежащие авторизованному пользователю.
-        Требует JWT-токен.
+        Возвращает список корзин, принадлежащих авторизованному пользователю.
+        Поддерживается пагинация через параметры `limit` и `offset`.
+        Нет ограничений на общее количество корзин — клиент управляет объёмом данных.
       security:
         - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Максимальное количество корзин в ответе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Смещение от начала списка (для пагинации)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
-          description: Список корзин
+          description: Список корзин с метаданными пагинации
           content:
-            application/hal+json:
+            application/json:
               schema:
-                type: object
-                properties:
-                  _embedded:
-                    type: object
-                    properties:
-                      carts:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/CartResponse'
-                  _links:
-                    type: object
-                    properties:
-                      self:
-                        type: object
-                        properties:
-                          href:
-                            type: string
-                            format: uri
-                        required: [href]
-                required: [_embedded, _links]
-                additionalProperties: false
+                $ref: '#/components/schemas/PaginatedCartsResponse'
         '401':
           description: Пользователь не авторизован
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthError'
-
-    post:
-      summary: Создать новую корзину
-      description: |
-        Создаёт новую корзину.
-        - Если предоставлен JWT — корзина привязывается к аккаунту.
-        - Если JWT отсутствует — создаётся анонимная корзина.
-        Возвращает cartId в заголовке Location.
-      responses:
-        '201':
-          description: Корзина создана
-          headers:
-            Location:
-              description: URL новой корзины
-              schema:
-                type: string
-                format: uri
-          content:
-            application/hal+json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '400':
-          description: Ошибка валидации
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-
-  '/carts/{cartId}':
-    parameters:
-      - name: cartId
-        in: path
-        required: true
-        schema:
-          type: string
-          pattern: '^[a-zA-Z0-9_-]{1,64}$'
-        description: Идентификатор корзины (уникальный, безопасный)
-    get:
-      summary: Получить корзину по ID
-      description: |
-        Возвращает корзину по cartId.
-        Доступно как для анонимных, так и для авторизованных пользователей.
-        Если корзина не существует — 404.
-      responses:
-        '200':
-          description: Корзина найдена
-          content:
-            application/hal+json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '404':
-          description: Корзина не найдена
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
-
-    delete:
-      summary: Очистить корзину целиком
-      description: Удаляет все позиции из корзины (не удаляет саму корзину).
-      parameters:
-        - name: If-Match
-          in: header
-          required: false
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Корзина очищена
-        '409':
-          description: Корзина заблокирована (оформляется)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConflictError'
-        '412':
-          description: ETag не совпадает
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConflictError'
 
   '/carts/{cartId}/items':
     parameters:
@@ -141,8 +58,13 @@ paths:
         schema:
           type: string
           pattern: '^[a-zA-Z0-9_-]{1,64}$'
+        description: Идентификатор корзины (уникальный, безопасный)
     post:
       summary: Добавить товар в корзину
+      description: |
+        Добавляет товар в указанную корзину.
+        Если корзина не существует или не принадлежит пользователю из JWT — возвращается 404 Not Found.
+        Нет ограничения на максимальное количество товара — проверка наличия выполняется на этапе добавления и оформления заказа.
       parameters:
         - name: Idempotency-Key
           in: header
@@ -162,7 +84,7 @@ paths:
         '201':
           description: Товар добавлен
           content:
-            application/hal+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/CartResponse'
         '400':
@@ -172,7 +94,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/InsufficientStockError'
         '404':
-          description: Корзина не найдена
+          description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
@@ -202,8 +124,7 @@ paths:
       summary: Обновить количество товара
       description: |
         Обновляет количество указанной позиции в корзине.
-        Требует актуальный ETag через заголовок If-Match для предотвращения конфликтов.
-        Доступно без авторизации, если известен cartId.
+        Если корзина или позиция не существуют, либо корзина не принадлежит пользователю из JWT — возвращается 404 Not Found.
       parameters:
         - name: If-Match
           in: header
@@ -220,7 +141,7 @@ paths:
         '200':
           description: Успешное обновление
           content:
-            application/hal+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/CartResponse'
         '412':
@@ -230,7 +151,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConflictError'
         '404':
-          description: Корзина или позиция не найдена
+          description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
@@ -238,12 +159,38 @@ paths:
 
     delete:
       summary: Удалить товар из корзины
-      description: Удаляет позицию из корзины по itemId. Доступно без авторизации.
+      description: |
+        Удаляет указанную позицию из корзины.
+        Если корзина или позиция не существуют, либо корзина не принадлежит пользователю из JWT — возвращается 404 Not Found.
       responses:
         '204':
           description: Товар удалён
         '404':
-          description: Корзина или позиция не найдена
+          description: Корзина не найдена или недоступна
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+
+  '/carts/{cartId}':
+    parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{1,64}$'
+        description: Идентификатор корзины (уникальный, безопасный)
+    delete:
+      summary: Очистить корзину целиком
+      description: |
+        Удаляет все позиции из корзины (корзина остаётся, но становится пустой).
+        Если корзина не существует или не принадлежит пользователю из JWT — возвращается 404 Not Found.
+      responses:
+        '204':
+          description: Корзина очищена
+        '404':
+          description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
@@ -260,8 +207,8 @@ paths:
     post:
       summary: Инициировать оформление заказа
       description: |
-        Запускает асинхронное оформление заказа.
-        Если пользователь не авторизован — возвращается 401, чтобы запросить логин.
+        Инициирует асинхронное оформление заказа для указанной корзины.
+        Если корзина не существует или не принадлежит пользователю из JWT — возвращается 404 Not Found.
       security:
         - bearerAuth: []
       parameters:
@@ -284,12 +231,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  taskId:
-                    type: string
-                required: [taskId]
-                additionalProperties: false
+                $ref: '#/components/schemas/CheckoutInitResponse'
         '400':
           description: Корзина пуста или содержит недоступные товары
           content:
@@ -303,7 +245,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthError'
         '404':
-          description: Корзина не найдена
+          description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
@@ -311,6 +253,8 @@ paths:
 
   '/cart/checkout/{taskId}':
     get:
+      security:
+        - bearerAuth: []
       summary: Получить статус оформления заказа
       parameters:
         - name: taskId
@@ -325,16 +269,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  orderId:
-                    type: string
-                required: [orderId]
-                additionalProperties: false
+                $ref: '#/components/schemas/CheckoutStatusResponse'
         '202':
           description: Оформление в процессе
         '404':
-          description: Задача не найдена
+          description: Задача не найдена или не принадлежит пользователю
           content:
             application/json:
               schema:
@@ -366,16 +305,18 @@ components:
           example: "Фильтр масляный"
         quantity:
           type: integer
+          description: Количество единиц товара в корзине
           minimum: 1
-          maximum: 99
           example: 2
         price:
           type: number
+          description: Цена одной единицы товара в рублях
           format: float
           minimum: 0
           example: 500.0
         inStock:
           type: boolean
+          description: Доступен ли товар на складе для заказа
           example: true
       required: [id, sku, name, quantity, price, inStock]
       additionalProperties: false
@@ -385,29 +326,44 @@ components:
       properties:
         items:
           type: array
+          description: Список товаров в корзине
           items:
             $ref: '#/components/schemas/CartItem'
         totalItems:
           type: integer
+          description: Общее количество товаров в корзине
           minimum: 0
           example: 2
         totalPrice:
           type: number
+          description: Общая стоимость всех товаров в корзине в рублях
           format: float
           minimum: 0
           example: 1000.0
         _links:
-          type: object
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  format: uri
-              required: [href]
-          required: [self]
-          additionalProperties: false
+          type: array
+          description: Список доступных действий с корзиной
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+                enum: [GET, POST, PATCH, DELETE]
+              href:
+                type: string
+                format: uri
+            required: [method, href]
+            additionalProperties: false
+          minItems: 1
+          example:
+            - method: GET
+              href: "/carts/abc123"
+            - method: POST
+              href: "/carts/abc123/items"
+            - method: POST
+              href: "/carts/abc123/checkout"
+            - method: DELETE
+              href: "/carts/abc123"
       required: [items, totalItems, totalPrice, _links]
       additionalProperties: false
 
@@ -416,12 +372,13 @@ components:
       properties:
         sku:
           type: string
+          description: Артикул производителя (OEM-номер)
           pattern: '^[A-Z0-9_-]+$'
           example: "BOSCH12345"
         quantity:
           type: integer
+          description: Количество товара для добавления в корзину
           minimum: 1
-          maximum: 99
           default: 1
           example: 1
       required: [sku, quantity]
@@ -432,8 +389,8 @@ components:
       properties:
         quantity:
           type: integer
+          description: Новое абсолютное количество товара в корзине
           minimum: 1
-          maximum: 99
           example: 3
       required: [quantity]
       additionalProperties: false
@@ -443,9 +400,11 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "unauthorized"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Требуется авторизация для оформления заказа"
       required: [error, message]
       additionalProperties: false
@@ -455,9 +414,11 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "insufficient_stock"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Недостаточно товара на складе"
         available:
           type: integer
@@ -471,9 +432,11 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "items_unavailable"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Некоторые товары больше не доступны"
       required: [error, message]
       additionalProperties: false
@@ -483,9 +446,11 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "cart_locked"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Корзина заблокирована для изменений"
       required: [error, message]
       additionalProperties: false
@@ -495,9 +460,11 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "not_found"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Корзина или позиция не найдена"
       required: [error, message]
       additionalProperties: false
@@ -507,9 +474,55 @@ components:
       properties:
         error:
           type: string
+          description: Код ошибки (машинно-читаемый)
           example: "validation_error"
         message:
           type: string
+          description: Человекочитаемое описание ошибки
           example: "Ошибка валидации данных"
       required: [error, message]
+      additionalProperties: false
+
+    PaginatedCartsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          description: Список корзин на текущей странице
+          items:
+            $ref: '#/components/schemas/CartResponse'
+        total:
+          type: integer
+          description: Общее количество корзин у пользователя
+          minimum: 0
+          example: 35
+        limit:
+          type: integer
+          description: Запрошенное максимальное количество корзин
+          example: 20
+        offset:
+          type: integer
+          description: Текущее смещение
+          example: 20
+      required: [items, total, limit, offset]
+      additionalProperties: false
+
+    CheckoutInitResponse:
+      type: object
+      properties:
+        taskId:
+          type: string
+          description: Идентификатор асинхронной задачи оформления
+          example: "task_abc123"
+      required: [taskId]
+      additionalProperties: false
+
+    CheckoutStatusResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: Идентификатор успешно созданного заказа
+          example: "order_12345"
+      required: [orderId]
       additionalProperties: false
