@@ -1,85 +1,86 @@
 @startuml
-title Создание заказа
+title Механика работы с корзиной и оформления заказа
 skinparam activity {
 startColor green
-endColor red
 stopColor red
 }
 
 swimlane Клиент
   start
-  : Переход к оформлению\nкорзины с товарами;
+  :Просмотр каталога,\nпоиск по VIN/артикулу;
+  :Добавить товар\nв корзину;
   note 
-    POST/checkout
+    POST /carts/{cartId}/items
   end note
 swimlane Сервер
-      if (Корзина\nне найдена?) then (Да)
+  if (Корзина\nне найдена?) then (Да)
+    :Создать анонимную корзину;
+  endif
+  :Проверить наличие\nтовара на складе;
+  if (Достаточно\nтовара?) then (Нет)
 swimlane Клиент
-        :Корзина\nне найдена;
-        note
-          404 Not Found
-          error "cart_not_found"
-        end note
-        stop
-      endif
-swimlane Сервер
-        if (Токен\nне валидный/\nне актуальный?) then (Да)
+    :Недостаточно\nтовара;
+    note
+      400 Bad Request
+      error "insufficient_stock"
+    end note
+    stop
+  endif
+  :Добавить товар\nв корзину;
 swimlane Клиент
-          :Не авторизован;
-          note
-            401 Unauthorized
-          end note
-          stop
-          else
+  :Обновить/удалить\nтовары;
+  note
+    PATCH /carts/{cartId}/items/{itemId}
+    DELETE /carts/{cartId}/items/{itemId}
+  end note
 swimlane Сервер
-            if (Корзина не принадлежит\nпользователю\nиз токена?) then (Да)
+  :Обновить корзину\nпо cartId\n(без авторизации);
 swimlane Клиент
-              :Несовпадение\nтокена и корзины;
-              note
-                403 Forbidden
-                error "cart not owened"
-              end note
-              stop
-              else
-              :Ввод\nадреса;
-        endif
-            endif
+  :Нажать "Оформить\nзаказ";
+  note
+    POST /carts/{cartId}/checkout
+  end note
 swimlane Сервер
-              if (Адрес\nне\nвалиден?) then (Да)
+  if (JWT\nпредоставлен?) then (Нет)
 swimlane Клиент
-                :Невалидный\nадресс;
-                note
-                 400 Bad Request
-                  error "invalid address"
-                end note
-                stop
-                else
+    :Требуется\nавторизация;
+    note
+      401 Unauthorized
+    end note
+    :Отправить логин/\nпароль;
+    note
+      POST /auth/login
+    end note
 swimlane Сервер
-                  :Получить данные\nкозины и товаров;
-                  note
-                    SELECT из cart_items и products
-                    WHERE session_id = :session;
-                  end note
-                if (Есть отсутствующие\nтовары\nиз корзины?) then (Да)
+    :Аутентифицировать\nпользователя;
+    if (Успешно?) then (Нет)
 swimlane Клиент
-                  :Нет\nв наличии;
-                   note 
-                    409 Conflict
-                    error"out of stock"
-                  end note
-                  stop
-                  else
-swimlane Сервер
-                  :Сохранить позиции\nзаказа;
-                  note
-                  INSERT INTO order_items (...);
-                  end note
-              endif
-                endif
+      :Неверные\nданные;
+      note
+        400 Bad Request
+        error "invalid_credentials"
+      end note
+      stop
+    endif
+    :Привязать корзину\nк user_id;
+  endif
+  :Проверить наличие\nвсех товаров\nв корзине;
+  if (Есть\nнедоступные\nтовары?) then (Да)
+swimlane Клиент
+    :Товары\nнедоступны;
+    note
+      409 Conflict
+      error "items_unavailable"
+    end note
+    stop
+  endif
+  :Создать заказ\nв БД;
+  :Отправить\nуведомление;
 swimlane Клиент
   :Успешно;
   note
     201 Created
+    {orderId: "12345"}
   end note
   stop
 @enduml
