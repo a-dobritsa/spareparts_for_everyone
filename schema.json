@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.spareparts-for-everyone.com/schemas",
+  "title": "Схемы API корзины",
+  "type": "object",
+  "properties": {
+    "CartItem": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Уникальный ID позиции в корзине" },
+        "sku": { "type": "string", "pattern": "^[A-Z0-9_-]+$" },
+        "name": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "price": { "type": "number", "format": "float", "minimum": 0 },
+        "inStock": { "type": "boolean" }
+      },
+      "required": ["id", "sku", "name", "quantity", "price", "inStock"],
+      "additionalProperties": false
+    },
+    "CartResponse": {
+      "type": "object",
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/properties/CartItem" } },
+        "totalItems": { "type": "integer", "minimum": 0 },
+        "totalPrice": { "type": "number", "format": "float", "minimum": 0 },
+        "_links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"] },
+              "href": { "type": "string", "format": "uri" }
+            },
+            "required": ["method", "href"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["items", "totalItems", "totalPrice", "_links"],
+      "additionalProperties": false
+    },
+    "AddItemRequest": {
+      "type": "object",
+      "properties": {
+        "sku": { "type": "string", "pattern": "^[A-Z0-9_-]+$" },
+        "quantity": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["sku", "quantity"],
+      "additionalProperties": false
+    },
+    "UpdateItemRequest": {
+      "type": "object",
+      "properties": {
+        "quantity": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["quantity"],
+      "additionalProperties": false
+    },
+    "AuthError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "InsufficientStockError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" },
+        "available": { "type": "integer" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "UnavailableItemsError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "ConflictError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "NotFoundError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "ValidationError": {
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["error", "message"],
+      "additionalProperties": false
+    },
+    "PaginatedCartsResponse": {
+      "type": "object",
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/properties/CartResponse" } },
+        "total": { "type": "integer", "minimum": 0 },
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" }
+      },
+      "required": ["items", "total", "limit", "offset"],
+      "additionalProperties": false
+    },
+    "CheckoutInitResponse": {
+      "type": "object",
+      "properties": {
+        "taskId": { "type": "string" }
+      },
+      "required": ["taskId"],
+      "additionalProperties": false
+    },
+    "CheckoutStatusResponse": {
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" }
+      },
+      "required": ["orderId"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
