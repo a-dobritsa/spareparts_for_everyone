@@ -4,7 +4,7 @@ info:
   description: |
     API для управления корзинами товаров.
     Все схемы запросов и ответов вынесены в отдельный файл:
-    https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json
+    https://github.com/a-dobritsa/spareparts_for_everyone/blob/main/schema.json
   version: 1.0.2
 servers:
   - url: https://api.spareparts-for-everyone.com/v1
@@ -43,13 +43,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/PaginatedCartsResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/PaginatedCartsResponse'
         '401':
           description: Пользователь не авторизован
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AuthError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/AuthError'
 
   '/carts/{cartId}/items':
     parameters:
@@ -80,32 +80,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AddItemRequest'
+              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/AddItemRequest'
       responses:
         '201':
           description: Товар добавлен
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CartResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/CartResponse'
         '400':
           description: Недостаточно товара на складе
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/InsufficientStockError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/InsufficientStockError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
         '409':
           description: Корзина заблокирована
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/ConflictError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/ConflictError'
 
   '/carts/{cartId}/items/{itemId}':
     parameters:
@@ -137,26 +137,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/UpdateItemRequest'
+              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/UpdateItemRequest'
       responses:
         '200':
           description: Успешное обновление
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CartResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/CartResponse'
         '412':
           description: ETag не совпадает — данные устарели
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/ConflictError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/ConflictError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
 
     delete:
       summary: Удалить товар из корзины
@@ -171,7 +171,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
 
   '/carts/{cartId}':
     parameters:
@@ -195,7 +195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
 
   '/carts/{cartId}/checkout':
     parameters:
@@ -232,25 +232,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CheckoutInitResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/CheckoutInitResponse'
         '400':
           description: Корзина пуста или содержит недоступные товары
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/UnavailableItemsError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/UnavailableItemsError'
         '401':
           description: Требуется авторизация для оформления заказа
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AuthError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/AuthError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
 
   '/cart/checkout/{taskId}':
     get:
@@ -270,7 +270,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CheckoutStatusResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/CheckoutStatusResponse'
         '202':
           description: Оформление в процессе
         '404':
@@ -278,7 +278,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schema.json#/NotFoundError'
 
 components:
   securitySchemes:
