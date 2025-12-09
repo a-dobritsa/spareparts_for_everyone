@@ -1,9 +1,10 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Корзина автозапчастей «Spare Parts for Everyone»
   description: |
     API для управления корзинами товаров.
-    Все схемы запросов и ответов соответствуют JSON Schema Draft 4.
+    Все схемы запросов и ответов вынесены в отдельный файл:
+    https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json
   version: 1.0.2
 servers:
   - url: https://api.spareparts-for-everyone.com/v1
@@ -42,13 +43,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedCartsResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/PaginatedCartsResponse'
         '401':
           description: Пользователь не авторизован
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AuthError'
 
   '/carts/{cartId}/items':
     parameters:
@@ -79,32 +80,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddItemRequest'
+              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AddItemRequest'
       responses:
         '201':
           description: Товар добавлен
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CartResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CartResponse'
         '400':
           description: Недостаточно товара на складе
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InsufficientStockError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/InsufficientStockError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
         '409':
           description: Корзина заблокирована
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/ConflictError'
 
   '/carts/{cartId}/items/{itemId}':
     parameters:
@@ -136,26 +137,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateItemRequest'
+              $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/UpdateItemRequest'
       responses:
         '200':
           description: Успешное обновление
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CartResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CartResponse'
         '412':
           description: ETag не совпадает — данные устарели
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/ConflictError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
 
     delete:
       summary: Удалить товар из корзины
@@ -170,7 +171,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
 
   '/carts/{cartId}':
     parameters:
@@ -194,7 +195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
 
   '/carts/{cartId}/checkout':
     parameters:
@@ -231,25 +232,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckoutInitResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CheckoutInitResponse'
         '400':
           description: Корзина пуста или содержит недоступные товары
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UnavailableItemsError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/UnavailableItemsError'
         '401':
           description: Требуется авторизация для оформления заказа
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/AuthError'
         '404':
           description: Корзина не найдена или недоступна
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
 
   '/cart/checkout/{taskId}':
     get:
@@ -269,7 +270,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckoutStatusResponse'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/CheckoutStatusResponse'
         '202':
           description: Оформление в процессе
         '404':
@@ -277,7 +278,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                $ref: 'https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json#/properties/NotFoundError'
 
 components:
   securitySchemes:
@@ -285,244 +286,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-  schemas:
-    CartItem:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Уникальный ID позиции в корзине
-          example: "item_123"
-        sku:
-          type: string
-          description: Артикул производителя (OEM-номер)
-          pattern: '^[A-Z0-9_-]+$'
-          example: "SKFOR020994"
-        name:
-          type: string
-          description: Название запчасти
-          example: "Фильтр масляный"
-        quantity:
-          type: integer
-          description: Количество единиц товара в корзине
-          minimum: 1
-          example: 2
-        price:
-          type: number
-          description: Цена одной единицы товара в рублях
-          format: float
-          minimum: 0
-          example: 500.0
-        inStock:
-          type: boolean
-          description: Доступен ли товар на складе для заказа
-          example: true
-      required: [id, sku, name, quantity, price, inStock]
-      additionalProperties: false
-
-    CartResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          description: Список товаров в корзине
-          items:
-            $ref: '#/components/schemas/CartItem'
-        totalItems:
-          type: integer
-          description: Общее количество товаров в корзине
-          minimum: 0
-          example: 2
-        totalPrice:
-          type: number
-          description: Общая стоимость всех товаров в корзине в рублях
-          format: float
-          minimum: 0
-          example: 1000.0
-        _links:
-          type: array
-          description: Список доступных действий с корзиной
-          items:
-            type: object
-            properties:
-              method:
-                type: string
-                enum: [GET, POST, PATCH, DELETE]
-              href:
-                type: string
-                format: uri
-            required: [method, href]
-            additionalProperties: false
-          minItems: 1
-          example:
-            - method: GET
-              href: "/carts/abc123"
-            - method: POST
-              href: "/carts/abc123/items"
-            - method: POST
-              href: "/carts/abc123/checkout"
-            - method: DELETE
-              href: "/carts/abc123"
-      required: [items, totalItems, totalPrice, _links]
-      additionalProperties: false
-
-    AddItemRequest:
-      type: object
-      properties:
-        sku:
-          type: string
-          description: Артикул производителя (OEM-номер)
-          pattern: '^[A-Z0-9_-]+$'
-          example: "BOSCH12345"
-        quantity:
-          type: integer
-          description: Количество товара для добавления в корзину
-          minimum: 1
-          default: 1
-          example: 1
-      required: [sku, quantity]
-      additionalProperties: false
-
-    UpdateItemRequest:
-      type: object
-      properties:
-        quantity:
-          type: integer
-          description: Новое абсолютное количество товара в корзине
-          minimum: 1
-          example: 3
-      required: [quantity]
-      additionalProperties: false
-
-    AuthError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "unauthorized"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Требуется авторизация для оформления заказа"
-      required: [error, message]
-      additionalProperties: false
-
-    InsufficientStockError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "insufficient_stock"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Недостаточно товара на складе"
-        available:
-          type: integer
-          description: Доступное количество
-          example: 5
-      required: [error, message]
-      additionalProperties: false
-
-    UnavailableItemsError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "items_unavailable"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Некоторые товары больше не доступны"
-      required: [error, message]
-      additionalProperties: false
-
-    ConflictError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "cart_locked"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Корзина заблокирована для изменений"
-      required: [error, message]
-      additionalProperties: false
-
-    NotFoundError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "not_found"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Корзина или позиция не найдена"
-      required: [error, message]
-      additionalProperties: false
-
-    ValidationError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Код ошибки (машинно-читаемый)
-          example: "validation_error"
-        message:
-          type: string
-          description: Человекочитаемое описание ошибки
-          example: "Ошибка валидации данных"
-      required: [error, message]
-      additionalProperties: false
-
-    PaginatedCartsResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          description: Список корзин на текущей странице
-          items:
-            $ref: '#/components/schemas/CartResponse'
-        total:
-          type: integer
-          description: Общее количество корзин у пользователя
-          minimum: 0
-          example: 35
-        limit:
-          type: integer
-          description: Запрошенное максимальное количество корзин
-          example: 20
-        offset:
-          type: integer
-          description: Текущее смещение
-          example: 20
-      required: [items, total, limit, offset]
-      additionalProperties: false
-
-    CheckoutInitResponse:
-      type: object
-      properties:
-        taskId:
-          type: string
-          description: Идентификатор асинхронной задачи оформления
-          example: "task_abc123"
-      required: [taskId]
-      additionalProperties: false
-
-    CheckoutStatusResponse:
-      type: object
-      properties:
-        orderId:
-          type: string
-          description: Идентификатор успешно созданного заказа
-          example: "order_12345"
-      required: [orderId]
-      additionalProperties: false
