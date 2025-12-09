@@ -1,39 +1,105 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://api.spareparts-for-everyone.com/schemas",
-  "title": "Схемы API корзины",
+  "$id": "https://raw.githubusercontent.com/a-dobritsa/spareparts_for_everyone/main/schemas/schema.json",
+  "title": "Схемы API корзины автозапчастей Spare Parts for Everyone",
+  "description": "Набор JSON Schema (Draft 2020-12) для валидации тел запросов и ответов в API управления корзинами автозапчастей.",
   "type": "object",
   "properties": {
     "CartItem": {
       "type": "object",
+      "description": "Позиция товара в корзине. Представляет одну запись — конкретную запчасть с количеством и метаданными.",
       "properties": {
-        "id": { "type": "string", "description": "Уникальный ID позиции в корзине" },
-        "sku": { "type": "string", "pattern": "^[A-Z0-9_-]+$" },
-        "name": { "type": "string" },
-        "quantity": { "type": "integer", "minimum": 1 },
-        "price": { "type": "number", "format": "float", "minimum": 0 },
-        "inStock": { "type": "boolean" }
+        "id": {
+          "type": "string",
+          "description": "Уникальный идентификатор позиции в корзине. Генерируется сервером при добавлении товара. Не связан с SKU или ID товара в каталоге.",
+          "example": "item_123"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Артикул производителя (OEM-номер) — уникальный номер запасной части, присвоенный производителем автомобиля или поставщиком. Используется для однозначной идентификации товара.",
+          "pattern": "^[A-Z0-9_-]+$",
+          "example": "SKFOR020994"
+        },
+        "name": {
+          "type": "string",
+          "description": "Полное название запасной части на русском языке. Отображается пользователю в корзине и на этапе оформления заказа.",
+          "example": "Фильтр масляный"
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Количество единиц данной запчасти, добавленных в корзину. Должно быть не менее 1. Проверка наличия на складе выполняется отдельно — при добавлении и при оформлении заказа.",
+          "minimum": 1,
+          "example": 2
+        },
+        "price": {
+          "type": "number",
+          "description": "Цена одной единицы товара в рублях с НДС. Формат — число с плавающей точкой. Обновляется в реальном времени при изменении состава корзины.",
+          "format": "float",
+          "minimum": 0,
+          "example": 500.0
+        },
+        "inStock": {
+          "type": "boolean",
+          "description": "Флаг, указывающий, доступна ли запчасть для заказа на текущий момент. Если false — товар нельзя оформить, даже если он есть в корзине.",
+          "example": true
+        }
       },
       "required": ["id", "sku", "name", "quantity", "price", "inStock"],
       "additionalProperties": false
     },
     "CartResponse": {
       "type": "object",
+      "description": "Полный ответ с информацией о корзине, включая товары, итоговые суммы и гипермедиа-ссылки (HATEOAS).",
       "properties": {
-        "items": { "type": "array", "items": { "$ref": "#/properties/CartItem" } },
-        "totalItems": { "type": "integer", "minimum": 0 },
-        "totalPrice": { "type": "number", "format": "float", "minimum": 0 },
+        "items": {
+          "type": "array",
+          "description": "Список всех позиций в корзине. Массив объектов CartItem.",
+          "items": {
+            "$ref": "#/properties/CartItem"
+          }
+        },
+        "totalItems": {
+          "type": "integer",
+          "description": "Общее количество единиц товара в корзине (сумма quantity всех позиций). Используется для отображения счётчика в UI.",
+          "minimum": 0,
+          "example": 2
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Общая стоимость всех товаров в корзине в рублях (сумма price * quantity). Обновляется при каждом изменении корзины.",
+          "format": "float",
+          "minimum": 0,
+          "example": 1000.0
+        },
         "_links": {
           "type": "array",
+          "description": "Список гипермедиа-ссылок (HATEOAS), описывающих допустимые действия с корзиной. Каждая ссылка содержит HTTP-метод и URL.",
           "items": {
             "type": "object",
             "properties": {
-              "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"] },
-              "href": { "type": "string", "format": "uri" }
+              "method": {
+                "type": "string",
+                "description": "HTTP-метод, который следует использовать для выполнения действия.",
+                "enum": ["GET", "POST", "PATCH", "DELETE"],
+                "example": "POST"
+              },
+              "href": {
+                "type": "string",
+                "description": "Абсолютный или относительный URL для выполнения действия. Должен быть валидным URI.",
+                "format": "uri",
+                "example": "/carts/abc123/items"
+              }
             },
             "required": ["method", "href"],
             "additionalProperties": false
-          }
+          },
+          "minItems": 1,
+          "example": [
+            { "method": "GET", "href": "/carts/abc123" },
+            { "method": "POST", "href": "/carts/abc123/items" },
+            { "method": "POST", "href": "/carts/abc123/checkout" },
+            { "method": "DELETE", "href": "/carts/abc123" }
+          ]
         }
       },
       "required": ["items", "totalItems", "totalPrice", "_links"],
@@ -41,99 +107,205 @@
     },
     "AddItemRequest": {
       "type": "object",
+      "description": "Тело запроса для добавления новой позиции в корзину. Содержит артикул и количество.",
       "properties": {
-        "sku": { "type": "string", "pattern": "^[A-Z0-9_-]+$" },
-        "quantity": { "type": "integer", "minimum": 1 }
+        "sku": {
+          "type": "string",
+          "description": "Артикул производителя (OEM-номер) существующей в каталоге запчасти. Должен точно соответствовать формату каталога.",
+          "pattern": "^[A-Z0-9_-]+$",
+          "example": "BOSCH12345"
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Количество единиц товара для добавления. Минимум — 1. Нет верхнего ограничения, но наличие на складе проверяется отдельно.",
+          "minimum": 1,
+          "default": 1,
+          "example": 1
+        }
       },
       "required": ["sku", "quantity"],
       "additionalProperties": false
     },
     "UpdateItemRequest": {
       "type": "object",
+      "description": "Тело запроса для обновления количества существующей позиции в корзине. Содержит новое абсолютное количество.",
       "properties": {
-        "quantity": { "type": "integer", "minimum": 1 }
+        "quantity": {
+          "type": "integer",
+          "description": "Новое абсолютное количество товара в корзине. Значение заменяет текущее — это не дельта. Минимум — 1.",
+          "minimum": 1,
+          "example": 3
+        }
       },
       "required": ["quantity"],
       "additionalProperties": false
     },
     "AuthError": {
       "type": "object",
+      "description": "Стандартная ошибка авторизации. Возвращается при попытке доступа к защищённому ресурсу без действительного JWT-токена.",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки. Используется для программной обработки.",
+          "example": "unauthorized"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки на русском языке. Отображается пользователю.",
+          "example": "Требуется авторизация для оформления заказа"
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "InsufficientStockError": {
       "type": "object",
+      "description": "Ошибка, возникающая при попытке добавить в корзину количество товара, превышающее доступное на складе.",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" },
-        "available": { "type": "integer" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки.",
+          "example": "insufficient_stock"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки.",
+          "example": "Недостаточно товара на складе"
+        },
+        "available": {
+          "type": "integer",
+          "description": "Количество товара, фактически доступное для заказа на текущий момент. Клиент может скорректировать запрос до этого значения.",
+          "example": 5
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "UnavailableItemsError": {
       "type": "object",
+      "description": "Ошибка, возникающая при оформлении заказа, если одна или несколько позиций в корзине больше не доступны (например, сняты с продажи).",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки.",
+          "example": "items_unavailable"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки.",
+          "example": "Некоторые товары больше не доступны"
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "ConflictError": {
       "type": "object",
+      "description": "Ошибка конфликта состояния. Возникает при попытке обновить корзину с устаревшим ETag (оптимистичная блокировка) или при попытке оформить уже заблокированную корзину.",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки.",
+          "example": "cart_locked"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки.",
+          "example": "Корзина заблокирована для изменений"
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "NotFoundError": {
       "type": "object",
+      "description": "Стандартная ошибка 'Не найдено'. Возвращается, если запрашиваемый ресурс (корзина, позиция) не существует ИЛИ не принадлежит авторизованному пользователю (для защиты конфиденциальности).",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки.",
+          "example": "not_found"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки.",
+          "example": "Корзина или позиция не найдена"
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "ValidationError": {
       "type": "object",
+      "description": "Общая ошибка валидации входных данных. Используется при некорректных параметрах запроса, ошибках аутентификации и др.",
       "properties": {
-        "error": { "type": "string" },
-        "message": { "type": "string" }
+        "error": {
+          "type": "string",
+          "description": "Машинно-читаемый код ошибки.",
+          "example": "validation_error"
+        },
+        "message": {
+          "type": "string",
+          "description": "Человекочитаемое описание ошибки.",
+          "example": "Ошибка валидации данных"
+        }
       },
       "required": ["error", "message"],
       "additionalProperties": false
     },
     "PaginatedCartsResponse": {
       "type": "object",
+      "description": "Ответ с пагинированным списком корзин пользователя. Используется для GET /carts.",
       "properties": {
-        "items": { "type": "array", "items": { "$ref": "#/properties/CartResponse" } },
-        "total": { "type": "integer", "minimum": 0 },
-        "limit": { "type": "integer" },
-        "offset": { "type": "integer" }
+        "items": {
+          "type": "array",
+          "description": "Список корзин на текущей странице. Каждая корзина представлена как CartResponse.",
+          "items": {
+            "$ref": "#/properties/CartResponse"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "description": "Общее количество корзин, принадлежащих пользователю. Используется для расчёта количества страниц.",
+          "minimum": 0,
+          "example": 35
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Максимальное количество корзин, запрошенное в текущем запросе (параметр limit).",
+          "example": 20
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Смещение от начала списка (параметр offset).",
+          "example": 20
+        }
       },
       "required": ["items", "total", "limit", "offset"],
       "additionalProperties": false
     },
     "CheckoutInitResponse": {
       "type": "object",
+      "description": "Ответ при успешном инициировании асинхронного оформления заказа. Содержит идентификатор задачи для отслеживания статуса.",
       "properties": {
-        "taskId": { "type": "string" }
+        "taskId": {
+          "type": "string",
+          "description": "Уникальный идентификатор асинхронной задачи оформления заказа. Используется для опроса статуса через GET /cart/checkout/{taskId}.",
+          "example": "task_abc123"
+        }
       },
       "required": ["taskId"],
       "additionalProperties": false
     },
     "CheckoutStatusResponse": {
       "type": "object",
+      "description": "Ответ при успешном завершении оформления заказа. Содержит идентификатор созданного заказа.",
       "properties": {
-        "orderId": { "type": "string" }
+        "orderId": {
+          "type": "string",
+          "description": "Уникальный идентификатор успешно созданного заказа в системе. Может использоваться для отображения деталей заказа.",
+          "example": "order_12345"
+        }
       },
       "required": ["orderId"],
       "additionalProperties": false
