@@ -2,6 +2,7 @@
 title Механика работы с корзиной и оформления заказа
 skinparam activity {
   startColor green
+  endColor red
   stopColor red
 }
 
@@ -33,7 +34,7 @@ swimlane Сервер
         error "insufficient_stock"
         available 5
       end note
-      stop
+      end
   endif
   :Добавить товар\nв корзину;
 
@@ -71,9 +72,11 @@ swimlane Сервер
             400 Bad Request
             error "invalid_credentials"
           end note
-          stop
+          end
+          else 
+        swimlane Сервер
+        :Привязать корзину\nк user_id\n(UPDATE carts SET user_id = ?);
       endif
-      :Привязать корзину\nк user_id\n(UPDATE carts SET user_id = ?);
   endif
 
   :Проверить наличие\nвсех товаров\nв корзине;
@@ -84,9 +87,9 @@ swimlane Сервер
         409 Conflict
         error "items_unavailable"
       end note
-      stop
+      end
   endif
-
+swimlane Сервер
   :Создать заказ\nв БД;
   :Отправить\nуведомление;
 
