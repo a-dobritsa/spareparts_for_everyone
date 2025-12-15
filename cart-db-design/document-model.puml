@@ -1,0 +1,29 @@
+@startuml
+
+class Cart {
+  _id: ObjectId
+  owner: OwnerInfo
+  items: Array<CartItem>
+  status: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+class OwnerInfo {
+  type: string
+  id: string
+}
+
+class CartItem {
+  id: string
+  sku: string
+  name: string
+  quantity: number
+  price: number
+  inStock: boolean
+}
+
+Cart "1  " *-- "1" OwnerInfo
+Cart "1 " *-- " *  " CartItem
+
+@enduml
