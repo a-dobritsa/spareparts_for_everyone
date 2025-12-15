@@ -3,7 +3,7 @@
 class Users {
     user_id:UUID <<PK>> 
     email:VARCHAR(255) <<UQ>> 
-    name : VARCHAR
+    name : VARCHAR (255)
     created_at : TIMESTAMP    
 }
 
