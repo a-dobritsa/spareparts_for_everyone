@@ -1,0 +1,47 @@
+@startchen
+left to right direction
+
+entity User {
+ user_id
+ email
+ name
+ created_at
+}
+entity Cart {
+ cart_id
+ created_at
+ updated_at
+ status
+}
+
+relationship have {
+}
+relationship owns{
+}
+relationship include{
+}
+
+entity Session{
+ session_id
+ started_at
+ expires_at
+}
+entity CartItem{
+ item_id
+ sku
+ name
+ quantity
+ price
+ in_stock
+}
+
+User -1- owns
+owns -N- Cart
+
+Session -1- have
+have -N- Cart
+
+Cart -1- include
+include -N- CartItem
+
+@endchen
