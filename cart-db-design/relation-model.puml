@@ -1,0 +1,45 @@
+@startuml
+
+class Users {
+    user_id:UUID <<PK>> 
+    email:VARCHAR(255) <<UQ>> 
+    name : VARCHAR
+    created_at : TIMESTAMP    
+}
+
+
+class Sessions {
+    session_id: TEXT <<PK>>
+    started_at: TIMESTAMP
+    expires_at TIMESTAMP
+}
+
+
+class Carts {
+    cart_id: UUID <<PK>>
+    user_id: UUID <<FK>>
+    session_id: TEXT <<FK>>
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    status: VARCHAR(20)
+}
+
+
+class CartItems {
+    item_id: UUID <<PK>>
+    cart_id: UUID <<FK>>
+    sku: VARCHAR(50)
+    name: VARCHAR(255)
+    quantity: INTEGER
+    price: NUMERIC(10,2)
+    in_stock: BOOLEAN
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+
+Users ||--o{ Carts
+Sessions ||--o{ Carts
+Carts ||--o{ CartItems
+
+@enduml
