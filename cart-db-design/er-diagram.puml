@@ -2,13 +2,13 @@
 left to right direction
 
 entity User {
- user_id
+ user_id <<key>>
  email
  name
  created_at
 }
 entity Cart {
- cart_id
+ cart_id <<key>>
  created_at
  updated_at
  status
@@ -22,12 +22,12 @@ relationship include{
 }
 
 entity Session{
- session_id
+ session_id <<key>>
  started_at
  expires_at
 }
 entity CartItem{
- item_id
+ item_id <<key>>
  sku
  name
  quantity
