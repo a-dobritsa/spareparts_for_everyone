@@ -14,11 +14,11 @@ System_Ext(catalog, "Catalog Service\n()", "Справочник запчаст�
 System_Ext(payment, "Payment Service\n(ЮKassa / СБП)", "Онлайн-оплата: карты, СБП, кошельки")
 System_Ext(delivery, "Delivery Service\n(СДЭК / Boxberry)", "Расчёт и отслеживание доставки")
 
-Rel(customer, spareparts, "Просматривает каталог, добавляет в корзину, оформляет заказ", "HTTPS", $tags="backup")
-Rel(admin, spareparts, "Управляет каталогом,заказами, пользователями", "HTTPS", $tags="backup")
-Rel(spareparts, auth, "Валидация токена", "JWT", $tags="backup")
-Rel(spareparts, catalog, "Получение данных о запчастях", "REST", $tags="backup")
-Rel(spareparts, payment, "Инициация оплаты", "REST", $tags="backup")
-Rel(spareparts, delivery, "Передача заказа на доставку", "REST", $tags="backup")
+Rel(customer, spareparts, "Просматривает каталог, добавляет в корзину, оформляет заказ",$tags="backup")
+Rel(admin, spareparts, "Управляет каталогом,заказами, пользователями",$tags="backup")
+Rel(spareparts, auth, "Валидация токена",$tags="backup")
+Rel(spareparts, catalog, "Получение данных о запчастях", $tags="backup")
+Rel(spareparts, payment, "Инициация оплаты", $tags="backup")
+Rel(spareparts, delivery, "Передача заказа на доставку", $tags="backup")
 
 @enduml
