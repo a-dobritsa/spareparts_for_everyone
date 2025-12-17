@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.7">
   <diagram name="Страница-1" id="QS9lqf1tDdbizMFOgr3S">
-    <mxGraphModel dx="1426" dy="823" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1426" dy="825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -21,17 +21,17 @@
         </object>
         <object placeholders="1" c4Name="Сервис Авторизации (Auth0/Keycloak)" c4Type="Software System" c4Description="Аутентификация и управления пользователями (выдача JWT)" label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="_r3WdxUHY90xyEMXh0_n-4">
           <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#8C8496;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#736782;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
-            <mxGeometry height="120" width="240" x="680" y="100" as="geometry" />
+            <mxGeometry height="120" width="240" x="680" y="40" as="geometry" />
           </mxCell>
         </object>
         <object placeholders="1" c4Name="Сервис оплаты (ЮKassa/СБП)" c4Type="Software System" c4Description="онлайн-оплата:карты,СБП,кошельки" label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="_r3WdxUHY90xyEMXh0_n-5">
           <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#8C8496;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#736782;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
-            <mxGeometry height="120" width="240" x="680" y="280" as="geometry" />
+            <mxGeometry height="120" width="240" x="680" y="200" as="geometry" />
           </mxCell>
         </object>
         <object placeholders="1" c4Name="Сервис доставки (СДЭК/BoxBerry)" c4Type="Software System" c4Description="Расчет и отслеживание доставки" label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="_r3WdxUHY90xyEMXh0_n-6">
           <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#8C8496;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#736782;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
-            <mxGeometry height="120" width="240" x="680" y="465" as="geometry" />
+            <mxGeometry height="120" width="240" x="680" y="520" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="_r3WdxUHY90xyEMXh0_n-8" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-3">
@@ -50,7 +50,7 @@
             <mxPoint x="43" y="26" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_r3WdxUHY90xyEMXh0_n-10" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-4">
+        <mxCell id="_r3WdxUHY90xyEMXh0_n-10" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.75;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-4">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="_r3WdxUHY90xyEMXh0_n-16" connectable="0" parent="_r3WdxUHY90xyEMXh0_n-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Валидация токена" vertex="1">
@@ -58,20 +58,43 @@
             <mxPoint x="13" y="-9" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_r3WdxUHY90xyEMXh0_n-11" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-5">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="_r3WdxUHY90xyEMXh0_n-11" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="310" />
+              <mxPoint x="540" y="260" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="_r3WdxUHY90xyEMXh0_n-15" connectable="0" parent="_r3WdxUHY90xyEMXh0_n-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Инициация оплаты" vertex="1">
           <mxGeometry relative="1" x="-0.0625" y="-2" as="geometry">
-            <mxPoint x="18" y="-12" as="offset" />
+            <mxPoint x="34" y="-22" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_r3WdxUHY90xyEMXh0_n-12" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-6">
+        <mxCell id="_r3WdxUHY90xyEMXh0_n-12" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;dashed=1;" target="_r3WdxUHY90xyEMXh0_n-6">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="_r3WdxUHY90xyEMXh0_n-17" connectable="0" parent="_r3WdxUHY90xyEMXh0_n-12" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Передача заказов на доставку" vertex="1">
           <mxGeometry relative="1" x="0.0143" y="2" as="geometry">
-            <mxPoint x="-19" y="76" as="offset" />
+            <mxPoint x="65" y="22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <object placeholders="1" c4Name="Unisender" c4Type="Software System" c4Description="Отправка SMS/email уведомлений" label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="jrBs44JuGv6xxVvnoiBX-1">
+          <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#8C8496;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#736782;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
+            <mxGeometry height="120" width="240" x="680" y="360" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="jrBs44JuGv6xxVvnoiBX-2" edge="1" parent="1" source="_r3WdxUHY90xyEMXh0_n-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" target="jrBs44JuGv6xxVvnoiBX-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="340" />
+              <mxPoint x="540" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jrBs44JuGv6xxVvnoiBX-3" connectable="0" parent="jrBs44JuGv6xxVvnoiBX-2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Отправка уведомлений" vertex="1">
+          <mxGeometry relative="1" x="0.2389" y="3" as="geometry">
+            <mxPoint x="16" y="-12" as="offset" />
           </mxGeometry>
         </mxCell>
       </root>
