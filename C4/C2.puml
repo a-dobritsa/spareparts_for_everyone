@@ -1,0 +1,48 @@
+@startuml
+!include <c4/C4_Container>
+
+title C2: Container Diagram — Spare Parts for Everyone
+
+Person(customer, "Покупатель", "Гость или зарегистрированный пользователь — ищет запчасти, оформляет заказ")
+Person(admin, "Администратор", "Управляет каталогом, заказами, пользователями")
+
+System_Boundary(spareparts, "Spare Parts for Everyone") {
+  Container(spa, "Frontend SPA", "TypeScript/React", "UI: поиск, корзина, оформление")
+  Container(gateway, "API Gateway", "Kong", "Маршрутизация, валидация JWT")
+
+  Container(cart, "Cart Service", "Java/Node.js", "Управление корзиной (анонимной и авторизованной)")
+  Container(catalog, "Catalog Service", "Java", "Справочник запчастей: OEM, цена, наличие")
+  Container(orders, "Order Service", "Java", "Создание заказа, управление статусами")
+
+  ContainerDb(pg, "PostgreSQL", "Основная БД", "Хранение: заказы, каталог, пользователи")
+  ContainerDb(mongo, "MongoDB", "Документная БД", "Хранение: корзины (альтернатива)")
+  ContainerQueue(kafka, "Kafka", "Брокер", "События: CheckoutRequested")
+}
+
+System_Ext(auth0, "Auth Service\n(Auth0)", "Аутентификация и выдача JWT")
+System_Ext(payment, "Payment Service\n(ЮKassa)", "Онлайн-оплата: карты, СБП")
+System_Ext(delivery, "Delivery Service\n(СДЭК)", "Доставка: расчёт стоимости, передача заказа")
+
+Rel(customer, spa, "Использует", "HTTPS")
+Rel(admin, spa, "Управляет", "HTTPS")
+Rel(spa, auth0, "Логин / регистрация", "HTTPS/Redirect")
+Rel(spa, gateway, "Запросы", "HTTPS")
+
+Rel(gateway, cart, "cart/*", "HTTPS/JSON")
+Rel(gateway, catalog, "catalog/*", "HTTPS/JSON")
+Rel(gateway, orders, "orders/*", "HTTPS/JSON")
+
+Rel(cart, catalog, "Проверка наличия", "HTTPS/JSON")
+Rel(cart, pg, "Хранение корзин (реляционный режим)", "JDBC")
+Rel(cart, mongo, "Хранение корзин (документный режим)", "Mongo Driver")
+Rel(cart, kafka, "Публикация события", "Kafka/JSON")
+
+Rel(orders, kafka, "Подписка на события", "Kafka/JSON")
+Rel(orders, payment, "Инициация оплаты", "HTTPS/JSON")
+Rel(orders, delivery, "Передача заказа", "HTTPS/JSON")
+Rel(orders, pg, "Хранение заказов", "JDBC")
+
+Rel(catalog, pg, "Хранение каталога", "JDBC")
+
+Rel(gateway, auth0, "Валидация токена", "JWT")
+@enduml

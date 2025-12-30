@@ -10,14 +10,12 @@ AddRelTag("backup", $lineStyle = DashedLine())
 
 System(spareparts, "Spare Parts for Everyone", "Интернет-магазин автозапчастей")
 System_Ext(auth, "Auth Service\n(Auth0 / Keycloak)", "Аутентификация и управление пользователями\n(выдача JWT)")
-System_Ext(catalog, "Catalog Service\n()", "Справочник запчастей: артикул, цена, наличие")
 System_Ext(payment, "Payment Service\n(ЮKassa / СБП)", "Онлайн-оплата: карты, СБП, кошельки")
 System_Ext(delivery, "Delivery Service\n(СДЭК / Boxberry)", "Расчёт и отслеживание доставки")
 
-Rel(customer, spareparts, "Просматривает каталог, добавляет в корзину, оформляет заказ",$tags="backup")
+Rel(customer, spareparts, "ПросматриваетПро каталог, добавляет в корзину, оформляет заказ",$tags="backup")
 Rel(admin, spareparts, "Управляет каталогом,заказами, пользователями",$tags="backup")
 Rel(spareparts, auth, "Валидация токена",$tags="backup")
-Rel(spareparts, catalog, "Получение данных о запчастях", $tags="backup")
 Rel(spareparts, payment, "Инициация оплаты", $tags="backup")
 Rel(spareparts, delivery, "Передача заказа на доставку", $tags="backup")
 
