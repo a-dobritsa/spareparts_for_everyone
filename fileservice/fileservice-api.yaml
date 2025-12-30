@@ -1,0 +1,330 @@
+openapi: 3.1.0
+info:
+  title: Файловый сервис «Spare Parts for Everyone»
+  description: |
+    API для управления файлами (фото/видео отзывов, отчётов и пр.).
+    Все схемы запросов и ответов соответствуют JSON Schema Draft 4.
+  version: 1.0.2
+servers:
+  - url: https://api.spareparts-for-everyone.com/v1
+
+paths:
+  /files:
+    post:
+      summary: Загрузить новый файл (регистрация метаданных)
+      description: |
+        Регистрирует метаданные нового файла. Реальное содержимое файла должно быть предварительно загружено в S3-хранилище.
+        Идемпотентность обеспечивается через заголовок `Idempotency-Key`.
+        Если файл с таким ключом уже существует — возвращается существующий ресурс (201 Created).
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: '^[a-zA-Z0-9_-]+$'
+          description: Уникальный идемпотентный ключ для предотвращения дублирования
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileMetadataRequest'
+      responses:
+        '201':
+          description: Файл успешно зарегистрирован
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: ETag созданного ресурса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResponse'
+        '400':
+          description: Ошибка валидации данных запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Файл с таким Idempotency-Key уже зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  '/files/{fileId}':
+    parameters:
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{1,64}$'
+        description: Уникальный идентификатор файла
+    get:
+      summary: Получить метаданные файла
+      description: |
+        Возвращает метаданные файла, принадлежащего сервису или пользователю.
+        Доступ ограничен владельцем или доверенными сервисами.
+      responses:
+        '200':
+          description: Метаданные успешно получены
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Текущий ETag ресурса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResponse'
+        '404':
+          description: Файл не найден или недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+
+    patch:
+      summary: Обновить статус файла
+      description: |
+        Обновляет статус файла (например, после валидации или обработки).
+        Требуется передача актуального ETag через заголовок `If-Match` для предотвращения конфликтов.
+      parameters:
+        - name: If-Match
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ETag текущей версии ресурса
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFileStatusRequest'
+      responses:
+        '200':
+          description: Статус успешно обновлён
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Новый ETag ресурса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResponse'
+        '400':
+          description: Недопустимый статус или нарушение контракта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Файл не найден или недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '412':
+          description: ETag не совпадает — данные устарели
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+        '423':
+          description: Файл заблокирован для изменений (например, помечен на удаление)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockedError'
+
+    delete:
+      summary: Удалить файл
+      description: |
+        Удаляет файл из хранилища и его метаданные.
+        Если файл уже заблокирован или отсутствует — возвращается 404.
+      responses:
+        '204':
+          description: Файл успешно удалён
+        '404':
+          description: Файл не найден или недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+
+components:
+  schemas:
+    FileMetadataRequest:
+      type: object
+      properties:
+        ownerId:
+          type: string
+          description: Идентификатор владельца (пользователь, сервис отзыва и т.д.)
+          example: "user_123"
+        ownerType:
+          type: string
+          enum: [USER, REVIEW_SERVICE, REPORT_SERVICE]
+          description: Тип владельца
+          example: "REVIEW_SERVICE"
+        filename:
+          type: string
+          description: Имя файла без пути
+          minLength: 1
+          maxLength: 255
+          pattern: '^[^/\\\\]+$'
+          example: "review_photo.jpg"
+        contentType:
+          type: string
+          description: MIME-тип файла
+          maxLength: 100
+          example: "image/jpeg"
+        sizeBytes:
+          type: integer
+          description: Размер файла в байтах
+          minimum: 0
+          maximum: 5368709120
+          example: 2097152
+        storagePath:
+          type: string
+          description: Путь к файлу в S3-совместимом хранилище
+          maxLength: 512
+          example: "reviews/user_123/photo.jpg"
+      required: [ownerId, ownerType, filename, contentType, sizeBytes, storagePath]
+      additionalProperties: false
+
+    UpdateFileStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [VALIDATED, PROCESSING, READY, REJECTED]
+          description: Новый статус файла после обработки
+          example: "READY"
+      required: [status]
+      additionalProperties: false
+
+    FileMetadataResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный идентификатор файла
+          example: "file_abc123"
+        ownerId:
+          type: string
+          example: "user_123"
+        ownerType:
+          type: string
+          enum: [USER, REVIEW_SERVICE, REPORT_SERVICE]
+          example: "REVIEW_SERVICE"
+        filename:
+          type: string
+          example: "review_photo.jpg"
+        contentType:
+          type: string
+          example: "image/jpeg"
+        sizeBytes:
+          type: integer
+          example: 2097152
+        storagePath:
+          type: string
+          example: "reviews/user_123/photo.jpg"
+        status:
+          type: string
+          enum: [PENDING, VALIDATED, PROCESSING, READY, REJECTED, LOCKED]
+          description: Текущий статус обработки
+          example: "READY"
+        createdAt:
+          type: string
+          format: date-time
+          description: Время создания записи
+          example: "2025-12-30T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Время последнего изменения
+          example: "2025-12-30T10:05:00Z"
+        _etag:
+          type: string
+          description: ETag ресурса (для условных запросов)
+          example: "a1b2c3d4e5f6"
+        _links:
+          type: array
+          description: Список доступных действий с файлом
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+                enum: [GET, PATCH, DELETE]
+              href:
+                type: string
+                format: uri
+            required: [method, href]
+            additionalProperties: false
+          minItems: 1
+          example:
+            - method: GET
+              href: "/files/file_abc123"
+            - method: PATCH
+              href: "/files/file_abc123"
+            - method: DELETE
+              href: "/files/file_abc123"
+      required: [id, ownerId, ownerType, filename, contentType, sizeBytes, storagePath, status, createdAt, updatedAt, _etag, _links]
+      additionalProperties: false
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "validation_error"
+        message:
+          type: string
+          example: "Недопустимое значение поля 'filename'"
+      required: [error, message]
+      additionalProperties: false
+
+    ConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "conflict"
+        message:
+          type: string
+          example: "Файл с таким Idempotency-Key уже существует"
+      required: [error, message]
+      additionalProperties: false
+
+    NotFoundError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "not_found"
+        message:
+          type: string
+          example: "Файл не найден или недоступен"
+      required: [error, message]
+      additionalProperties: false
+
+    LockedError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "locked"
+        message:
+          type: string
+          example: "Файл заблокирован для изменений"
+      required: [error, message]
+      additionalProperties: false

@@ -1,0 +1,24 @@
+@startuml
+entity "file_metadata" as file {
+  * id: UUID
+  --
+  * owner_id: TEXT
+  * owner_type: TEXT
+  * filename: VARCHAR(255)
+  * content_type: VARCHAR(100)
+  * size_bytes: BIGINT
+  * storage_path: VARCHAR(512)
+  * status: TEXT
+  * created_at: TIMESTAMPTZ
+  * updated_at: TIMESTAMPTZ
+  * etag: VARCHAR(64)
+}
+
+note right of file
+  <b>Ограничения:</b>
+  - owner_type ∈ {USER, REVIEW_SERVICE, REPORT_SERVICE}
+  - status ∈ {PENDING, VALIDATED, PROCESSING, READY, REJECTED, LOCKED}
+  - size_bytes ∈ [0, 5368709120]
+  - Все поля обязательны (NOT NULL)
+end note
+@enduml

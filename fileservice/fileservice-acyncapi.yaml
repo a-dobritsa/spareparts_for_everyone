@@ -1,0 +1,119 @@
+asyncapi: 2.6.0
+info:
+  title: Файловый сервис — асинхронная обработка (антивирус + медиа)
+  description: |
+    Асинхронные события, связанные с пост-валидационной обработкой файлов:
+    - сканирование антивирусом,
+    - сжатие изображений,
+    - конвертация видео.
+    Используется после успешной синхронной валидации и загрузки во внешнее S3 (Yandex).
+  version: 1.0.1
+
+channels:
+  file.processing.request:
+    description: Запрос на глубокую обработку файла (антивирус + медиа)
+    publish:
+      summary: Компонент проверки файлов публикует задачу после успешной загрузки во внешнее S3
+      operationId: publishProcessingRequest
+      message:
+        $ref: '#/components/messages/FileProcessingRequest'
+    subscribe:
+      summary: Worker обработки файлов получает задачу
+      operationId: consumeProcessingRequest
+      message:
+        $ref: '#/components/messages/FileProcessingRequest'
+
+  file.processing.result:
+    description: Результат глубокой обработки файла
+    publish:
+      summary: Worker публикует результат после завершения всех этапов
+      operationId: publishProcessingResult
+      message:
+        $ref: '#/components/messages/FileProcessingResult'
+    subscribe:
+      summary: Файловый сервис получает результат и обновляет статус
+      operationId: consumeProcessingResult
+      message:
+        $ref: '#/components/messages/FileProcessingResult'
+
+components:
+  messages:
+    FileProcessingRequest:
+      name: FileProcessingRequest
+      title: Запрос на пост-валидационную обработку
+      summary: Файл уже прошёл валидацию и загружен во внешнее S3
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FileProcessingRequest'
+
+    FileProcessingResult:
+      name: FileProcessingResult
+      title: Результат пост-валидационной обработки
+      summary: Антивирус и медиаобработка завершены
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FileProcessingResult'
+
+  schemas:
+    FileProcessingRequest:
+      type: object
+      properties:
+        fileId:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{1,64}$'
+          description: Идентификатор файла в системе
+          example: "file_abc123"
+        ownerId:
+          type: string
+          example: "review_service_123"
+        ownerType:
+          type: string
+          enum: [USER, REVIEW_SERVICE, REPORT_SERVICE]
+          example: "REVIEW_SERVICE"
+        externalStoragePath:
+          type: string
+          maxLength: 512
+          description: Путь к файлу во внешнем S3 (Yandex Cloud)
+          example: "reviews/user123/photo.jpg"
+        contentType:
+          type: string
+          maxLength: 100
+          example: "image/jpeg"
+        sizeBytes:
+          type: integer
+          minimum: 0
+          maximum: 5368709120
+          example: 2097152
+        submittedAt:
+          type: string
+          format: date-time
+          description: Время постановки задачи в очередь
+          example: "2025-12-30T10:00:00Z"
+      required: [fileId, ownerId, ownerType, externalStoragePath, contentType, sizeBytes, submittedAt]
+      additionalProperties: false
+
+    FileProcessingResult:
+      type: object
+      properties:
+        fileId:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{1,64}$'
+          example: "file_abc123"
+        status:
+          type: string
+          enum: [READY, REJECTED]
+          description: |
+            READY — файл прошёл антивирус и медиаобработку, загружен во внешнее S3.
+            REJECTED — файл заблокирован (вирус, повреждение и т.п.).
+          example: "READY"
+        reason:
+          type: string
+          description: Причина отклонения (если status = REJECTED)
+          example: "Malware detected by KESL"
+        completedAt:
+          type: string
+          format: date-time
+          description: Время завершения обработки
+          example: "2025-12-30T10:00:10Z"
+      required: [fileId, status, completedAt]
+      additionalProperties: false
