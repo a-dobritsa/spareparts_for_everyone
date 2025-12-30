@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "",
+  "$id": "https://github.com/a-dobritsa/spareparts_for_everyone/blob/main/fileservice/fileserviceschema.json",
   "title": "Схемы API файлового сервиса Spare Parts for Everyone",
   "description": "Набор JSON Schema (Draft 2020-12) для валидации тел запросов и ответов в API управления файлами.",
   "type": "object",
