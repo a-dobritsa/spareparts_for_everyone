@@ -12,6 +12,9 @@ entity "file_metadata" as file {
   * created_at: TIMESTAMPTZ
   * updated_at: TIMESTAMPTZ
   * etag: VARCHAR(64)
+  * deleted_at: TIMESTAMPTZ
+  *s3_upload_id: TEXT
+  *s3_parts: JSON
 }
 
 note right of file
@@ -19,6 +22,8 @@ note right of file
   - owner_type ∈ {USER, REVIEW_SERVICE, REPORT_SERVICE}
   - status ∈ {PENDING, VALIDATED, PROCESSING, READY, REJECTED, LOCKED}
   - size_bytes ∈ [0, 5368709120]
-  - Все поля обязательны (NOT NULL)
+  - Все поля, кроме deleted_at, обязательны (NOT NULL)
+  - deleted_at = NULL → файл активен
+  - Логическое удаление: установка deleted_at = NOW()
 end note
 @enduml
