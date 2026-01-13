@@ -5,6 +5,94 @@
   "description": "Набор JSON Schema (Draft 2020-12) для валидации тел запросов и ответов в API управления файлами.",
   "type": "object",
   "properties": {
+    "FileUploadInitRequest": {
+      "type": "object",
+      "description": "Тело запроса для инициации чанковой загрузки файла. Содержит метаданные и общий размер.",
+      "properties": {
+        "filename": {
+          "type": "string",
+          "description": "Имя файла без пути. Не должно содержать символов '/', '\\'.",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\]+$",
+          "example": "review_video.mp4"
+        },
+        "contentType": {
+          "type": "string",
+          "description": "MIME-тип файла (например, video/mp4, image/jpeg).",
+          "maxLength": 100,
+          "example": "video/mp4"
+        },
+        "totalSize": {
+          "type": "integer",
+          "description": "Общий размер файла в байтах. Максимальный допустимый размер — 5 ГБ.",
+          "minimum": 1,
+          "maximum": 5368709120,
+          "example": 2147483648
+        }
+      },
+      "required": ["filename", "contentType", "totalSize"],
+      "additionalProperties": false
+    },
+    "FileUploadInitResponse": {
+      "type": "object",
+      "description": "Ответ на успешную инициацию чанковой загрузки. Содержит идентификатор сессии и рекомендуемый размер части.",
+      "properties": {
+        "uploadId": {
+          "type": "string",
+          "description": "Уникальный идентификатор сессии загрузки.",
+          "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+          "example": "upload_abc123"
+        },
+        "partSize": {
+          "type": "integer",
+          "description": "Рекомендуемый размер каждой части в байтах (минимум 5 МБ).",
+          "minimum": 5242880,
+          "example": 5242880
+        }
+      },
+      "required": ["uploadId", "partSize"],
+      "additionalProperties": false
+    },
+    "FilePartResponse": {
+      "type": "object",
+      "description": "Ответ на успешную загрузку одной части файла. Содержит номер части и её ETag.",
+      "properties": {
+        "partNumber": {
+          "type": "integer",
+          "description": "Порядковый номер части (начиная с 1).",
+          "minimum": 1,
+          "example": 1
+        },
+        "etag": {
+          "type": "string",
+          "description": "ETag части, возвращённый S3-хранилищем (включая кавычки).",
+          "example": "\"abc123def456...\""
+        }
+      },
+      "required": ["partNumber", "etag"],
+      "additionalProperties": false
+    },
+    "FileUploadCompleteRequest": {
+      "type": "object",
+      "description": "Тело запроса для завершения чанковой загрузки. Содержит информацию о владельце файла.",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Идентификатор владельца файла: пользователя, сервиса отзывов или сервиса отчётности.",
+          "example": "review_service_123"
+        },
+        "ownerType": {
+          "type": "string",
+          "description": "Тип владельца файла.",
+          "enum": ["USER", "REVIEW_SERVICE", "REPORT_SERVICE"],
+          "example": "REVIEW_SERVICE"
+        }
+      },
+      "required": ["ownerId", "ownerType"],
+      "additionalProperties": false
+    },
+
     "FileMetadataRequest": {
       "type": "object",
       "description": "Тело запроса для регистрации нового файла. Содержит метаданные, необходимые для загрузки и последующей обработки.",

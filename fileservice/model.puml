@@ -13,8 +13,6 @@ entity "file_metadata" as file {
   * updated_at: TIMESTAMPTZ
   * etag: VARCHAR(64)
   * deleted_at: TIMESTAMPTZ
-  *s3_upload_id: TEXT
-  *s3_parts: JSON
 }
 
 note right of file

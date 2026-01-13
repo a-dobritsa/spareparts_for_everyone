@@ -9,6 +9,129 @@ servers:
   - url: https://api.spareparts-for-everyone.com/v1
 
 paths:
+  /files/upload/init:
+    post:
+      summary: Инициировать чанковую загрузку файла
+      description: |
+        Создаёт сессию multipart-загрузки. Возвращает uploadId и рекомендуемый размер части.
+        Идемпотентность обеспечивается через заголовок `Idempotency-Key`.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: '^[a-zA-Z0-9_-]+$'
+          description: Уникальный ключ для идемпотентности
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUploadInitRequest'
+      responses:
+        '201':
+          description: Сессия успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadInitResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Сессия с таким Idempotency-Key уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+  /files/upload/{uploadId}/part':
+    put:
+      summary: Загрузить часть файла
+      description: |
+        Загружает одну часть файла. Часть обрабатывается потоково и сразу отправляется в S3.
+        Идемпотентность: повторная загрузка той же части (по номеру) перезапишет её в S3.
+      parameters:
+        - name: uploadId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{1,64}$'
+        - name: Part-Number
+          in: header
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            description: Номер части (начиная с 1)
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Часть успешно загружена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilePartResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          description: Сессия загрузки не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+  /files/upload/{uploadId}/complete':
+    post:
+      summary: Завершить чанковую загрузку
+      description: |
+        Завершает multipart-загрузку в S3 и регистрирует метаданные файла.
+        После этого файл становится доступен через `GET /files/{fileId}`.
+      parameters:
+        - name: uploadId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{1,64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUploadCompleteRequest'
+      responses:
+        '201':
+          description: Файл успешно загружен и зарегистрирован
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          description: Сессия загрузки не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '409':
+          description: Некоторые части не были загружены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'       
   /files:
     post:
       summary: Загрузить новый файл (регистрация метаданных)
@@ -57,7 +180,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConflictError'
 
-  '/files/{fileId}':
+  /files/{fileId}':
     parameters:
       - name: fileId
         in: path
@@ -162,6 +285,57 @@ paths:
 
 components:
   schemas:
+    FileUploadInitRequest:
+      type: object
+      properties:
+        filename:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: '^[^/\\\\]+$'
+        contentType:
+          type: string
+          maxLength: 100
+        totalSize:
+          type: integer
+          minimum: 1
+          maximum: 5368709120
+      required: [filename, contentType, totalSize]
+      additionalProperties: false
+    FileUploadInitResponse:
+      type: object
+      properties:
+        uploadId:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{1,64}$'
+        partSize:
+          type: integer
+          minimum: 5242880  # 5 МБ
+          description: Рекомендуемый размер части в байтах
+      required: [uploadId, partSize]
+      additionalProperties: false
+    FilePartResponse:
+      type: object
+      properties:
+        partNumber:
+          type: integer
+          minimum: 1
+        etag:
+          type: string
+          description: ETag части от S3 (включая кавычки)
+      required: [partNumber, etag]
+      additionalProperties: false
+    FileUploadCompleteRequest:
+      type: object
+      properties:
+        ownerId:
+          type: string
+        ownerType:
+          type: string
+          enum: [USER, REVIEW_SERVICE, REPORT_SERVICE]
+      required: [ownerId, ownerType]
+      additionalProperties: false
+    
     FileMetadataRequest:
       type: object
       properties:
@@ -328,3 +502,29 @@ components:
           example: "Файл заблокирован для изменений"
       required: [error, message]
       additionalProperties: false
+  
+  responses:
+    ValidationError:
+      description: Ошибка валидации данных запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    ConflictError:
+      description: Конфликт состояния (например, дубликат или устаревший ETag)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConflictError'
+    NotFoundError:
+      description: Ресурс не найден или недоступен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
+    LockedError:
+      description: Ресурс заблокирован для изменений
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LockedError'
