@@ -12,7 +12,7 @@
         "downloadUrl": {
           "type": "string",
           "format": "uri",
-          "description": "Presigned URL для скачивания файла. Действителен 15 минут.",
+          "description": "Presigned URL для скачивания файла. Действителен 5 секунд.",
           "example": "https://storage.yandexcloud.net/spareparts/reviews/file123.jpg?Signature=abc123&Expires=1700000000"
         },
         "expiresAt": {
